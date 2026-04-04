@@ -6,8 +6,7 @@ const submitBtn = document.getElementById('submit-btn');
 // Define dynamic backend URL based on environment
 const BACKEND_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
     ? 'http://localhost:3000' 
-    // TODO: Update THIS URL once you deploy your backend to Render!
-    : 'https://your-backend-app.onrender.com';
+    : 'https://nimbus-w3fa.onrender.com';
 
 document.addEventListener("DOMContentLoaded", () => {
     // Pre-fill city from localStorage if they have a recents
