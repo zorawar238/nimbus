@@ -1,0 +1,14 @@
+[
+  {
+    "email": "test@example.com",
+    "city": "London",
+    "lat": 51.50853,
+    "lon": -0.12574
+  },
+  {
+    "email": "nishantkr238@gmail.com",
+    "city": "Nagpur",
+    "lat": 21.14631,
+    "lon": 79.08491
+  }
+]

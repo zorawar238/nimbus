@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meet the Team | Nimbus</title>
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="nav-brand">
+            <i data-lucide="cloud-sun"></i> Nimbus
+        </a>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="history.html">History</a></li>
+            <li><a href="team.html" class="active">Team</a></li>
+            <li><a href="login.html">Subscribe</a></li>
+        </ul>
+        <button id="theme-toggle" class="theme-toggle">
+            <i data-lucide="moon"></i>
+        </button>
+    </nav>
+
+    <main class="container">
+        <div style="text-align: center; margin-bottom: 3rem;">
+            <h1 style="font-size: 2.5rem; margin-bottom: 1rem;">Meet the Nimbus Team</h1>
+            <p style="color: var(--text-secondary); max-width: 600px; margin: 0 auto;">laudea kuch kam kia hai koi sab
+                maine kia hai sir pls i reqest
+                give only marks to me and pratik because atleast he pickup my calls.</p>
+        </div>
+
+        <div class="team-grid">
+            <!-- Member 1 -->
+            <div class="team-card glass">
+                <img src=" " alt="Nishan kumar" class="team-photo">
+                <h3 class="team-name">Nishant kumar</h3>
+                <div class="team-role">Lead Developer</div>
+                <p class="team-bio">Nishant architected the core infrastructure of Nimbus.He loves responsive design and
+                    seamless user experiences.</p>
+                <div class="social-links">
+                    <a href="#"><i data-lucide="github"></i></a>
+                    <a href="#"><i data-lucide="twitter"></i></a>
+                </div>
+            </div>
+
+            <!-- Member 2 -->
+            <div class="team-card glass">
+                <img src=" " alt="Pratik" class="team-photo">
+                <h3 class="team-name">Pratik </h3>
+                <div class="team-role">UI/UX Designer</div>
+                <p class="team-bio">Pratik is the creative mind behind the glassmorphism aesthetics and smooth
+                    animations you see across the app.</p>
+                <div class="social-links">
+                    <a href="#"><i data-lucide="dribbble"></i></a>
+                    <a href="#"><i data-lucide="linkedin"></i></a>
+                </div>
+            </div>
+
+            <!-- Member 3 -->
+            <div class="team-card glass">
+                <img src=" " alt="RISHAB" class="team-photo">
+                <h3 class="team-name">rishab bhadwa</h3>
+                <div class="team-role">lauda kuch ataa nahi hai</div>
+                <p class="team-bio">iske toh gand meh land de dete HAM .</p>
+                <div class="social-links">
+                    <a href="#"><i data-lucide="github"></i></a>
+                    <a href="#"><i data-lucide="linkedin"></i></a>
+                </div>
+            </div>
+        </div>
+    </main>
+    <style>
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .team-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 2.5rem 1.5rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .team-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.2);
+            background: var(--card-hover);
+            border-color: var(--accent-color);
+        }
+
+        .team-photo {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 1.5rem;
+            border: 4px solid var(--glass-border);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .team-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .team-role {
+            font-size: 0.9rem;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .team-bio {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .social-links a {
+            color: var(--text-secondary);
+            transition: color 0.2s;
+        }
+
+        .social-links a:hover {
+            color: var(--accent-color);
+        }
+    </style>
+    <!-- Scripts -->
+    <script src="js/app.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historical Weather | Nimbus</title>
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="nav-brand">
+            <i data-lucide="cloud-sun"></i> Nimbus
+        </a>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="history.html" class="active">History</a></li>
+            <li><a href="team.html">Team</a></li>
+            <li><a href="login.html">Subscribe</a></li>
+        </ul>
+        <button id="theme-toggle" class="theme-toggle">
+            <i data-lucide="moon"></i>
+        </button>
+    </nav>
+
+    <main class="container">
+        <div class="glass" style="padding: 2rem; margin-bottom: 2rem;">
+            <h2 style="margin-bottom: 1.5rem;">Historical Weather Data</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Look up weather conditions from exactly 1 to
+                10 years ago for any given week.</p>
+
+            <form id="history-form" class="history-form">
+                <div class="input-group">
+                    <label for="hist-city">City Name</label>
+                    <input type="text" id="hist-city" class="history-input" placeholder="e.g. New York, Tokyo" required>
+                </div>
+                <div class="input-group">
+                    <label for="hist-year">Years Ago</label>
+                    <select id="hist-year" class="history-select">
+                        <option value="1">1 Year Ago</option>
+                        <option value="2">2 Years Ago</option>
+                        <option value="5">5 Years Ago</option>
+                        <option value="10">10 Years Ago</option>
+                    </select>
+                </div>
+                <button type="submit" class="submit-btn">Lookup Data</button>
+            </form>
+        </div>
+
+        <div id="loading" style="display: none; text-align: center; padding: 3rem;">
+            <div class="spinner"></div>
+            <p style="margin-top: 1rem; color: var(--text-secondary);">Analyzing historical records...</p>
+        </div>
+
+        <div id="history-content" style="display: none;">
+            <h3 id="history-header" style="margin-bottom: 1.5rem; padding-left: 0.5rem;">Recent Results</h3>
+            <div id="history-results" class="history-results">
+                <!-- Data cards here -->
+            </div>
+        </div>
+    </main>
+    <style>
+        .history-form {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            align-items: end;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .input-group label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .history-input,
+        .history-select {
+            padding: 1rem 1.5rem;
+            font-size: 1rem;
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            background: var(--glass-bg);
+            color: var(--text-primary);
+            outline: none;
+            backdrop-filter: blur(8px);
+        }
+
+        /* For Firefox/Chrome basic styling overrides */
+        .history-select option {
+            background: var(--nav-bg);
+            color: var(--text-primary);
+        }
+
+        .submit-btn {
+            padding: 1rem;
+            border: none;
+            border-radius: 12px;
+            background: var(--accent-color);
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s, transform 0.2s;
+            height: 52px;
+        }
+
+        .submit-btn:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+
+        .history-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .daily-card {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            transition: transform 0.2s ease;
+        }
+
+        .daily-card:hover {
+            transform: translateY(-5px);
+            background: var(--card-hover);
+        }
+
+        .daily-card .date {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .daily-card .min-max {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .history-form {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <!-- Scripts -->
+    <script src="js/app.js"></script>
+    <script src="js/history.js"></script>
+</body>
+
+</html>
