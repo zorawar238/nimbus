@@ -81,7 +81,7 @@ app.post('/api/subscribe', async (req, res) => {
         await Subscriber.findOneAndUpdate(
             { email }, 
             { city: exactCity, lat, lon }, 
-            { upsert: true, new: true }
+            { upsert: true, returnDocument: 'after' }
         );
         
         res.status(200).json({ message: 'Successfully subscribed!', city: exactCity });
