@@ -10,7 +10,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Allow CORS for the Netlify frontend and Localhost
-const allowedOrigins = ['http://localhost:3000', 'https://graceful-treacle-8cb142.netlify.app'];
+const allowedOrigins = ['http://localhost:3000', 'http://127.0.0.1:5500', 'http://localhost:5500', 'https://graceful-treacle-8cb142.netlify.app'];
 app.use(cors({
     origin: function(origin, callback) {
         // allow requests with no origin (like mobile apps or curl requests)
@@ -49,6 +49,10 @@ const Subscriber = mongoose.model('Subscriber', subscriberSchema);
 
 // API Endpoint to Subscribe
 app.post('/api/subscribe', async (req, res) => {
+    if (mongoose.connection.readyState !== 1) {
+        return res.status(500).json({ error: 'Database connection is not available. Please check environment variables.' });
+    }
+
     const { email, city } = req.body;
     if (!email || !city) {
         return res.status(400).json({ error: 'Email and city are required' });
