@@ -6,6 +6,11 @@ const path = require('path');
 const cron = require('node-cron');
 const nodemailer = require('nodemailer');
 const mongoose = require('mongoose');
+const dns = require('dns');
+
+// Force Node to use IPv4 for DNS resolution instead of IPv6. 
+// Fixes ENETUNREACH errors on free tiers like Render when trying to send emails.
+dns.setDefaultResultOrder('ipv4first');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
