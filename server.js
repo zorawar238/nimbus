@@ -130,7 +130,9 @@ app.get('/api/unsubscribe', async (req, res) => {
 
 // Configure Nodemailer
 const transporter = nodemailer.createTransport({
-    service: 'gmail', // You can use other services
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // upgrades to STARTTLS
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
@@ -255,5 +257,9 @@ app.get('/api/send-now', requireCronKey, (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`Backend server running on http://localhost:${PORT}`);
-    console.log(`Make sure to set EMAIL_USER and EMAIL_PASS in your .env file to enable actual emails.`);
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        console.warn(`WARNING: EMAIL_USER or EMAIL_PASS not set. Emails will not be sent!`);
+    } else {
+        console.log(`Email credentials found. Email service is ready.`);
+    }
 });
