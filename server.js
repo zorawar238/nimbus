@@ -143,7 +143,12 @@ const sendWelcomeEmail = async (email, city, lat, lon) => {
         const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
         const weatherData = await weatherRes.json();
         
-        const temp = weatherData.current_weather.temperature;
+        let temp = 'N/A';
+        if (weatherData && weatherData.current_weather) {
+            temp = weatherData.current_weather.temperature;
+        } else {
+            console.warn(`Open-Meteo error for Welcome Email:`, weatherData);
+        }
         
         const mailOptions = {
             from: process.env.EMAIL_USER,
@@ -185,7 +190,12 @@ const sendDailyReports = async () => {
                 const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${sub.lat}&longitude=${sub.lon}&current_weather=true`);
                 const weatherData = await weatherRes.json();
                 
-                const temp = weatherData.current_weather.temperature;
+                let temp = 'N/A';
+                if (weatherData && weatherData.current_weather) {
+                    temp = weatherData.current_weather.temperature;
+                } else {
+                    console.warn(`Open-Meteo error for ${sub.email}:`, weatherData);
+                }
                 
                 const mailOptions = {
                     from: process.env.EMAIL_USER,
