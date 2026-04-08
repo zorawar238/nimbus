@@ -184,23 +184,17 @@ const sendDailyReports = async () => {
 cron.schedule('0 8 * * *', sendDailyReports);
 
 // API Endpoint to Manually Trigger Emails (For Testing or External Cron)
-app.post('/api/send-now', async (req, res) => {
-    try {
-        await sendDailyReports();
-        res.status(200).json({ message: 'Reports sent out!' });
-    } catch (err) {
-        res.status(500).json({ error: 'Failed to send reports.' });
-    }
+app.post('/api/send-now', (req, res) => {
+    // Trigger in the background so cron-job doesn't timeout
+    sendDailyReports().catch(err => console.error('Background report failure:', err));
+    res.status(200).json({ message: 'Reports are being sent out in the background!' });
 });
 
 // GET version for easier external triggering (e.g., cron-job.org or UptimeRobot)
-app.get('/api/send-now', async (req, res) => {
-    try {
-        await sendDailyReports();
-        res.status(200).json({ message: 'Reports sent out!' });
-    } catch (err) {
-        res.status(500).json({ error: 'Failed to send reports.' });
-    }
+app.get('/api/send-now', (req, res) => {
+    // Trigger in the background so cron-job doesn't timeout
+    sendDailyReports().catch(err => console.error('Background report failure:', err));
+    res.status(200).json({ message: 'Reports are being sent out in the background!' });
 });
 
 app.listen(PORT, () => {
