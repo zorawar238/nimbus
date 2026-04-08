@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 const path = require('path');
 const cron = require('node-cron');
@@ -53,8 +54,15 @@ const subscriberSchema = new mongoose.Schema({
 
 const Subscriber = mongoose.model('Subscriber', subscriberSchema);
 
+// Rate limiter for subscriptions (Max 5 requests per 15 minutes per IP)
+const subscribeLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, 
+    max: 5,
+    message: { error: 'Too many subscription requests from this IP, please try again later.' }
+});
+
 // API Endpoint to Subscribe
-app.post('/api/subscribe', async (req, res) => {
+app.post('/api/subscribe', subscribeLimiter, async (req, res) => {
     if (mongoose.connection.readyState !== 1) {
         return res.status(500).json({ error: 'Database connection is not available. Please check environment variables.' });
     }
@@ -62,6 +70,12 @@ app.post('/api/subscribe', async (req, res) => {
     const { email, city } = req.body;
     if (!email || !city) {
         return res.status(400).json({ error: 'Email and city are required' });
+    }
+    
+    // Basic email validation regex
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        return res.status(400).json({ error: 'Please provide a valid email address.' });
     }
 
     try {
@@ -85,12 +99,29 @@ app.post('/api/subscribe', async (req, res) => {
         );
         
         // Send an immediate welcome email
-        sendWelcomeEmail(email, exactCity, lat, lon);
+        sendWelcomeEmail(email, exactCity, lat, lon).catch(console.error);
         
         res.status(200).json({ message: 'Successfully subscribed!', city: exactCity });
     } catch (err) {
         console.error('Error in subscription:', err);
         res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// API Endpoint to Unsubscribe
+app.get('/api/unsubscribe', async (req, res) => {
+    const email = req.query.email;
+    if (!email) {
+        return res.status(400).send('Email is required');
+    }
+    if (mongoose.connection.readyState !== 1) {
+        return res.status(500).send('Database connection error. Try later.');
+    }
+    try {
+        await Subscriber.findOneAndDelete({ email });
+        res.send(`<h1>Unsubscribed</h1><p>You have successfully unsubscribed <b>${email}</b> from Nimbus weather reports.</p>`);
+    } catch(err) {
+        res.status(500).send('Error processing unsubscribe request.');
     }
 });
 
@@ -122,6 +153,8 @@ const sendWelcomeEmail = async (email, city, lat, lon) => {
                 <p>You will now receive a weather report every day at 8 AM.</p>
                 <br/>
                 <small>Sent from your Nimbus Weather App</small>
+                <br/>
+                <small><a href="https://nimbus-w3fa.onrender.com/api/unsubscribe?email=${encodeURIComponent(email)}">Unsubscribe from daily reports</a></small>
             `
         };
 
@@ -162,6 +195,8 @@ const sendDailyReports = async () => {
                         <p>Stay prepared and have a great day!</p>
                         <br/>
                         <small>Sent from your Nimbus Weather App</small>
+                        <br/>
+                        <small><a href="https://nimbus-w3fa.onrender.com/api/unsubscribe?email=${encodeURIComponent(sub.email)}">Unsubscribe from daily reports</a></small>
                     `
                 };
 
@@ -183,15 +218,23 @@ const sendDailyReports = async () => {
 // Daily Job at 8 AM
 cron.schedule('0 8 * * *', sendDailyReports);
 
+// Middleware to verify CRON API Key
+const requireCronKey = (req, res, next) => {
+    if (!process.env.CRON_SECRET_KEY || req.query.key !== process.env.CRON_SECRET_KEY) {
+        return res.status(401).json({ error: 'Unauthorized: Invalid API Key' });
+    }
+    next();
+};
+
 // API Endpoint to Manually Trigger Emails (For Testing or External Cron)
-app.post('/api/send-now', (req, res) => {
+app.post('/api/send-now', requireCronKey, (req, res) => {
     // Trigger in the background so cron-job doesn't timeout
     sendDailyReports().catch(err => console.error('Background report failure:', err));
     res.status(200).json({ message: 'Reports are being sent out in the background!' });
 });
 
 // GET version for easier external triggering (e.g., cron-job.org or UptimeRobot)
-app.get('/api/send-now', (req, res) => {
+app.get('/api/send-now', requireCronKey, (req, res) => {
     // Trigger in the background so cron-job doesn't timeout
     sendDailyReports().catch(err => console.error('Background report failure:', err));
     res.status(200).json({ message: 'Reports are being sent out in the background!' });
