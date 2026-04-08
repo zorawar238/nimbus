@@ -10,6 +10,9 @@ const mongoose = require('mongoose');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Tell Express to trust Render's reverse proxy (fixes rate-limiter bugs)
+app.set('trust proxy', 1);
+
 // Allow CORS for the Netlify frontend and Localhost
 const allowedOrigins = [
     'http://localhost:3000', 
