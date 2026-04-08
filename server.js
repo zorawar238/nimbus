@@ -84,6 +84,9 @@ app.post('/api/subscribe', async (req, res) => {
             { upsert: true, returnDocument: 'after' }
         );
         
+        // Send an immediate welcome email
+        sendWelcomeEmail(email, exactCity, lat, lon);
+        
         res.status(200).json({ message: 'Successfully subscribed!', city: exactCity });
     } catch (err) {
         console.error('Error in subscription:', err);
@@ -99,6 +102,39 @@ const transporter = nodemailer.createTransport({
         pass: process.env.EMAIL_PASS
     }
 });
+
+// Function to send a welcome email
+const sendWelcomeEmail = async (email, city, lat, lon) => {
+    try {
+        const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
+        const weatherData = await weatherRes.json();
+        
+        const temp = weatherData.current_weather.temperature;
+        
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: `Welcome to Nimbus Weather! - ${city}`,
+            html: `
+                <h2>Welcome to Nimbus!</h2>
+                <p>You have successfully subscribed to daily weather updates for <strong>${city}</strong>.</p>
+                <h3>Current Temperature: ${temp}°C</h3>
+                <p>You will now receive a weather report every day at 8 AM.</p>
+                <br/>
+                <small>Sent from your Nimbus Weather App</small>
+            `
+        };
+
+        if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+            await transporter.sendMail(mailOptions);
+            console.log(`Welcome email sent to ${email}`);
+        } else {
+            console.log(`Mock send: Would send welcome email to ${email} (${temp}°C in ${city})`);
+        }
+    } catch (error) {
+        console.error(`Failed to send welcome email to ${email}:`, error);
+    }
+};
 
 // Function to send reports
 const sendDailyReports = async () => {
@@ -147,8 +183,18 @@ const sendDailyReports = async () => {
 // Daily Job at 8 AM
 cron.schedule('0 8 * * *', sendDailyReports);
 
-// API Endpoint to Manually Trigger Emails (For Testing)
+// API Endpoint to Manually Trigger Emails (For Testing or External Cron)
 app.post('/api/send-now', async (req, res) => {
+    try {
+        await sendDailyReports();
+        res.status(200).json({ message: 'Reports sent out!' });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to send reports.' });
+    }
+});
+
+// GET version for easier external triggering (e.g., cron-job.org or UptimeRobot)
+app.get('/api/send-now', async (req, res) => {
     try {
         await sendDailyReports();
         res.status(200).json({ message: 'Reports sent out!' });
