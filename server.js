@@ -222,21 +222,27 @@ const sendDailyReports = async () => {
 
                 if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
                     await transporter.sendMail(mailOptions);
-                    console.log(`Email sent to ${sub.email}`);
+                    console.log(`✅ Daily report sent successfully to: ${sub.email}`);
                 } else {
-                    console.log(`Mock send: Would send email to ${sub.email} (${temp}°C in ${sub.city})`);
+                    console.log(`ℹ️  Mock send: Daily report would be sent to ${sub.email} (${temp}°C in ${sub.city})`);
                 }
             } catch (error) {
-                console.error(`Failed to generate/send report to ${sub.email}:`, error);
+                console.error(`❌ Failed to send daily report to ${sub.email}:`, error.message);
             }
         }
+        console.log(`✨ Weather report job completed. Total subscribers processed: ${subscribers.length}`);
     } catch (err) {
-        console.error('Failed to fetch subscribers from DB:', err);
+        console.error('❌ Database error during weather report job:', err);
     }
 };
 
-// Daily Job at 8 AM
-cron.schedule('0 8 * * *', sendDailyReports);
+// Daily Job at 8 AM (Asia/Kolkata Timezone)
+cron.schedule('0 8 * * *', () => {
+    sendDailyReports();
+}, {
+    scheduled: true,
+    timezone: "Asia/Kolkata"
+});
 
 // Middleware to verify CRON API Key
 const requireCronKey = (req, res, next) => {
@@ -263,8 +269,10 @@ app.get('/api/send-now', requireCronKey, (req, res) => {
 app.listen(PORT, () => {
     console.log(`Backend server running on http://localhost:${PORT}`);
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-        console.warn(`WARNING: EMAIL_USER or EMAIL_PASS not set. Emails will not be sent!`);
+        console.warn(`⚠️  WARNING: EMAIL_USER or EMAIL_PASS not set. Emails will not be sent!`);
     } else {
-        console.log(`Email credentials found. Email service is ready.`);
+        console.log(`📧 Email credentials verified. Service is ready.`);
     }
+    console.log(`⏰ Cron Job configured for 08:00 AM (Asia/Kolkata)`);
+    console.log(`🕒 Server Local Time: ${new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })} (Asia/Kolkata)`);
 });
