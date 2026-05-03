@@ -36,6 +36,16 @@ document.addEventListener("DOMContentLoaded", () => {
         themeToggle.appendChild(iconNode);
         lucide.createIcons();
     }
+
+    // Check auth status for nav link
+    const navLoginLink = document.getElementById('nav-login-link');
+    if (navLoginLink) {
+        if (localStorage.getItem('token')) {
+            navLoginLink.textContent = 'My Account';
+        } else {
+            navLoginLink.textContent = 'Login';
+        }
+    }
 });
 
 // Utility: Show Toast Notification

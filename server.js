@@ -7,6 +7,8 @@ const cron = require('node-cron');
 const nodemailer = require('nodemailer');
 const mongoose = require('mongoose');
 const dns = require('dns');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 // Force Node to use IPv4 for DNS resolution instead of IPv6. 
 // Fixes ENETUNREACH errors on free tiers like Render when trying to send emails.
@@ -61,6 +63,20 @@ const subscriberSchema = new mongoose.Schema({
 });
 
 const Subscriber = mongoose.model('Subscriber', subscriberSchema);
+
+// Define User Schema for Authentication
+const userSchema = new mongoose.Schema({
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    pastSearches: [{
+        name: String,
+        lat: Number,
+        lon: Number,
+        date: { type: Date, default: Date.now }
+    }]
+});
+
+const User = mongoose.model('User', userSchema);
 
 // Rate limiter for subscriptions (Max 5 requests per 15 minutes per IP)
 const subscribeLimiter = rateLimit({
@@ -130,6 +146,94 @@ app.get('/api/unsubscribe', async (req, res) => {
         res.send(`<h1>Unsubscribed</h1><p>You have successfully unsubscribed <b>${email}</b> from Nimbus weather reports.</p>`);
     } catch(err) {
         res.status(500).send('Error processing unsubscribe request.');
+    }
+});
+
+// --- Authentication Endpoints ---
+
+// Register User
+app.post('/api/register', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
+
+        const existingUser = await User.findOne({ email });
+        if (existingUser) return res.status(400).json({ error: 'Email already exists' });
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newUser = new User({ email, password: hashedPassword, pastSearches: [] });
+        await newUser.save();
+
+        res.status(201).json({ message: 'User registered successfully' });
+    } catch (err) {
+        console.error('Registration error:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Login User
+app.post('/api/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        const user = await User.findOne({ email });
+        
+        if (!user || !(await bcrypt.compare(password, user.password))) {
+            return res.status(401).json({ error: 'Invalid email or password' });
+        }
+
+        const token = jwt.sign({ userId: user._id, email: user.email }, process.env.CRON_SECRET_KEY || 'fallback_secret', { expiresIn: '7d' });
+        res.status(200).json({ message: 'Login successful', token, email: user.email });
+    } catch (err) {
+        console.error('Login error:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Middleware to protect routes
+const requireAuth = (req, res, next) => {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'Unauthorized' });
+
+    try {
+        const decoded = jwt.verify(token, process.env.CRON_SECRET_KEY || 'fallback_secret');
+        req.user = decoded;
+        next();
+    } catch (err) {
+        res.status(401).json({ error: 'Invalid token' });
+    }
+};
+
+// Get User Searches
+app.get('/api/user/searches', requireAuth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId);
+        if (!user) return res.status(404).json({ error: 'User not found' });
+        
+        // Return latest 10 searches, sorted by newest first
+        res.status(200).json({ searches: user.pastSearches.sort((a,b) => b.date - a.date).slice(0, 10) });
+    } catch (err) {
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Add User Search
+app.post('/api/user/searches', requireAuth, async (req, res) => {
+    try {
+        const { name, lat, lon } = req.body;
+        if (!name || lat == null || lon == null) return res.status(400).json({ error: 'Missing search data' });
+
+        const user = await User.findById(req.user.userId);
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        // Remove duplicates if the exact city was already searched recently
+        user.pastSearches = user.pastSearches.filter(s => s.name !== name);
+        
+        user.pastSearches.push({ name, lat, lon, date: new Date() });
+        await user.save();
+
+        res.status(200).json({ message: 'Search saved' });
+    } catch (err) {
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 

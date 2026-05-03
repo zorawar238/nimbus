@@ -114,6 +114,7 @@ async function searchCity(query) {
         
         let city = data.results[0];
         saveRecentSearch(city.name, city.latitude, city.longitude);
+        syncSearchToBackend(city.name, city.latitude, city.longitude);
         fetchWeather(city.latitude, city.longitude, city.name);
         searchInput.value = '';
     } catch (err) {
@@ -130,6 +131,23 @@ function saveRecentSearch(name, lat, lon) {
     recents.unshift({ name, lat, lon });
     if(recents.length > 5) recents.pop();
     localStorage.setItem('recentSearches', JSON.stringify(recents));
+}
+
+async function syncSearchToBackend(name, lat, lon) {
+    const token = localStorage.getItem('token');
+    if (!token) return; // User not logged in, ignore
+    try {
+        await fetch('/api/user/searches', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ name, lat, lon })
+        });
+    } catch (err) {
+        console.error('Failed to sync search to backend', err);
+    }
 }
 
 async function fetchWeather(lat, lon, name) {
