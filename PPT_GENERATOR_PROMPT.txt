@@ -1,0 +1,36 @@
+Please generate a professional, 6-slide PowerPoint presentation outline for my university software project. 
+
+**Project Name:** Nimbus Weather
+**Team Members:** Nishant Kumar (Lead Full-Stack Developer), Pratik (UI/UX Designer), Rishab (Software Engineer)
+**Project Description:** A full-stack web application that provides real-time weather forecasts, historical weather data, and an automated daily weather report sent directly to users' emails every morning at 8 AM.
+
+Please create the slides with the following structure. For each slide, provide a catchy Title, 3-4 concise bullet points, and a suggestion for what type of image or screenshot should be on the slide.
+
+**Slide 1: Title Slide**
+- Include the project name, a one-sentence tagline about modern automated weather, and the team members' names.
+
+**Slide 2: The Problem & Our Solution**
+- Mention that checking the weather is manual and UI's are often cluttered.
+- Our solution: A beautiful, automated app that brings the weather to you via daily email subscriptions, wrapped in a clean Glassmorphism UI.
+
+**Slide 3: Core Features**
+- Live Weather & 24-Hour Forecasts (using Geolocation and Chart.js).
+- "Time Machine" Historical Data (looking up exact weather from 1 to 5 years ago).
+- Automated Daily Email Reports (hands-off notifications).
+
+**Slide 4: The Tech Stack**
+- Frontend: Vanilla JavaScript, HTML5, CSS3 (Glassmorphism design).
+- Backend: Node.js, Express.js.
+- Database & Automation: MongoDB (for subscribers), Nodemailer, and node-cron.
+- APIs: Open-Meteo & BigDataCloud.
+
+**Slide 5: Technical Challenges Overcome**
+- Mention fixing an IPv6 SMTP email delivery bug on the Render hosting platform by forcing Node.js to use IPv4 DNS resolution.
+- Mention securing our automated backend endpoints using API Secret Keys and Rate Limiters to prevent bot spam.
+
+**Slide 6: Conclusion & Future Scope**
+- Summarize that the app successfully connects a lightweight JS frontend to a secure, database-driven backend.
+- Future scope: Adding full user accounts with encrypted passwords (bcrypt) to save custom dashboard preferences.
+- End with a "Thank You / Q&A" note.
+
+Please keep the tone professional, technical but accessible, and format the output clearly so I can easily copy it into PowerPoint slides.
