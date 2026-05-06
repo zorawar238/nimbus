@@ -4,7 +4,6 @@ const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 const path = require('path');
 const cron = require('node-cron');
-const nodemailer = require('nodemailer');
 const mongoose = require('mongoose');
 const dns = require('dns');
 const bcrypt = require('bcrypt');
@@ -237,17 +236,7 @@ app.post('/api/user/searches', requireAuth, async (req, res) => {
     }
 });
 
-// Configure Nodemailer
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // true for 465, false for other ports
-    requireTLS: true,
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
-});
+// Using Brevo HTTP API for emails instead of Nodemailer SMTP
 
 // Function to send a welcome email
 const sendWelcomeEmail = async (email, city, lat, lon) => {
@@ -262,25 +251,38 @@ const sendWelcomeEmail = async (email, city, lat, lon) => {
             console.warn(`Open-Meteo error for Welcome Email:`, weatherData);
         }
         
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: email,
-            subject: `Welcome to Nimbus Weather! - ${city}`,
-            html: `
-                <h2>Welcome to Nimbus!</h2>
-                <p>You have successfully subscribed to daily weather updates for <strong>${city}</strong>.</p>
-                <h3>Current Temperature: ${temp}°C</h3>
-                <p>You will now receive a weather report every day at 8 AM.</p>
-                <br/>
-                <small>Sent from your Nimbus Weather App</small>
-                <br/>
-                <small><a href="https://nimbus-w3fa.onrender.com/api/unsubscribe?email=${encodeURIComponent(email)}">Unsubscribe from daily reports</a></small>
-            `
-        };
+        const htmlContent = `
+            <h2>Welcome to Nimbus!</h2>
+            <p>You have successfully subscribed to daily weather updates for <strong>${city}</strong>.</p>
+            <h3>Current Temperature: ${temp}°C</h3>
+            <p>You will now receive a weather report every day at 8 AM.</p>
+            <br/>
+            <small>Sent from your Nimbus Weather App</small>
+            <br/>
+            <small><a href="https://nimbus-w3fa.onrender.com/api/unsubscribe?email=${encodeURIComponent(email)}">Unsubscribe from daily reports</a></small>
+        `;
 
-        if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-            await transporter.sendMail(mailOptions);
-            console.log(`Welcome email sent to ${email}`);
+        if (process.env.BREVO_API_KEY && process.env.EMAIL_USER) {
+            const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+                method: 'POST',
+                headers: {
+                    'accept': 'application/json',
+                    'api-key': process.env.BREVO_API_KEY,
+                    'content-type': 'application/json'
+                },
+                body: JSON.stringify({
+                    sender: { email: process.env.EMAIL_USER, name: 'Nimbus Weather' },
+                    to: [{ email: email }],
+                    subject: `Welcome to Nimbus Weather! - ${city}`,
+                    htmlContent: htmlContent
+                })
+            });
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error(`Brevo API Error:`, errorData);
+            } else {
+                console.log(`Welcome email sent to ${email} via Brevo`);
+            }
         } else {
             console.log(`Mock send: Would send welcome email to ${email} (${temp}°C in ${city})`);
         }
@@ -309,25 +311,39 @@ const sendDailyReports = async () => {
                     console.warn(`Open-Meteo error for ${sub.email}:`, weatherData);
                 }
                 
-                const mailOptions = {
-                    from: process.env.EMAIL_USER,
-                    to: sub.email,
-                    subject: `Daily Weather Report for ${sub.city} - Nimbus`,
-                    html: `
-                        <h2>Good Morning!</h2>
-                        <p>Here is your daily weather update for <strong>${sub.city}</strong>.</p>
-                        <h3>Current Temperature: ${temp}°C</h3>
-                        <p>Stay prepared and have a great day!</p>
-                        <br/>
-                        <small>Sent from your Nimbus Weather App</small>
-                        <br/>
-                        <small><a href="https://nimbus-w3fa.onrender.com/api/unsubscribe?email=${encodeURIComponent(sub.email)}">Unsubscribe from daily reports</a></small>
-                    `
-                };
+                const htmlContent = `
+                    <h2>Good Morning!</h2>
+                    <p>Here is your daily weather update for <strong>${sub.city}</strong>.</p>
+                    <h3>Current Temperature: ${temp}°C</h3>
+                    <p>Stay prepared and have a great day!</p>
+                    <br/>
+                    <small>Sent from your Nimbus Weather App</small>
+                    <br/>
+                    <small><a href="https://nimbus-w3fa.onrender.com/api/unsubscribe?email=${encodeURIComponent(sub.email)}">Unsubscribe from daily reports</a></small>
+                `;
 
-                if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-                    await transporter.sendMail(mailOptions);
-                    console.log(`✅ Daily report sent successfully to: ${sub.email}`);
+                if (process.env.BREVO_API_KEY && process.env.EMAIL_USER) {
+                    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+                        method: 'POST',
+                        headers: {
+                            'accept': 'application/json',
+                            'api-key': process.env.BREVO_API_KEY,
+                            'content-type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            sender: { email: process.env.EMAIL_USER, name: 'Nimbus Weather' },
+                            to: [{ email: sub.email }],
+                            subject: `Daily Weather Report for ${sub.city} - Nimbus`,
+                            htmlContent: htmlContent
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        console.error(`❌ Failed to send daily report to ${sub.email} via Brevo:`, errorData);
+                    } else {
+                        console.log(`✅ Daily report sent successfully to: ${sub.email}`);
+                    }
                 } else {
                     console.log(`ℹ️  Mock send: Daily report would be sent to ${sub.email} (${temp}°C in ${sub.city})`);
                 }
@@ -373,10 +389,10 @@ app.get('/api/send-now', requireCronKey, (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`Backend server running on http://localhost:${PORT}`);
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-        console.warn(`⚠️  WARNING: EMAIL_USER or EMAIL_PASS not set. Emails will not be sent!`);
+    if (!process.env.BREVO_API_KEY || !process.env.EMAIL_USER) {
+        console.warn(`⚠️  WARNING: BREVO_API_KEY or EMAIL_USER not set. Emails will not be sent!`);
     } else {
-        console.log(`📧 Email credentials verified. Service is ready.`);
+        console.log(`📧 Brevo API credentials verified. Service is ready.`);
     }
     console.log(`⏰ Cron Job configured for 08:00 AM (Asia/Kolkata)`);
     console.log(`🕒 Server Local Time: ${new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })} (Asia/Kolkata)`);
