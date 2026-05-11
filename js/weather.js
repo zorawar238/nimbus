@@ -133,11 +133,15 @@ function saveRecentSearch(name, lat, lon) {
     localStorage.setItem('recentSearches', JSON.stringify(recents));
 }
 
+const BACKEND_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:'
+    ? 'http://localhost:3000' 
+    : 'https://nimbus-w3fa.onrender.com';
+
 async function syncSearchToBackend(name, lat, lon) {
     const token = localStorage.getItem('token');
     if (!token) return; // User not logged in, ignore
     try {
-        await fetch('/api/user/searches', {
+        await fetch(`${BACKEND_URL}/api/user/searches`, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',

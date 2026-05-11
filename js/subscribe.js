@@ -3,8 +3,7 @@ const emailInput = document.getElementById('email');
 const cityInput = document.getElementById('city');
 const submitBtn = document.getElementById('submit-btn');
 
-// Define dynamic backend URL based on environment
-const BACKEND_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+const BACKEND_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:'
     ? 'http://localhost:3000' 
     : 'https://nimbus-w3fa.onrender.com';
 

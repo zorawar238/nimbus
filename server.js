@@ -25,7 +25,8 @@ const allowedOrigins = [
     'http://127.0.0.1:5500', 
     'http://localhost:5500', 
     'https://graceful-treacle-8cb142.netlify.app',
-    'https://nimbus-w3fa.onrender.com'
+    'https://nimbus-w3fa.onrender.com',
+    'null'
 ];
 app.use(cors({
     origin: function(origin, callback) {
